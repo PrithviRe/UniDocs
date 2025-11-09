@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,18 +21,30 @@ import com.example.unidocs.util.FileUtils
 
 @Composable
 fun MainScreen(
-    onOpenPdf: (Uri) -> Unit
+    onOpenPdf: (Uri) -> Unit,
+    onOpenDocx: (Uri) -> Unit
 ) {
     val context = LocalContext.current
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
     var fileName by remember { mutableStateOf<String?>(null) }
     var fileSize by remember { mutableStateOf<Long?>(null) }
+    var selectedFileType by remember { mutableStateOf<String?>(null) }
     
-    val openDocLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val openPdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { 
             selectedUri = it
             fileName = FileUtils.getFileName(context, it)
             fileSize = FileUtils.getFileSize(context, it)
+            selectedFileType = "pdf"
+        }
+    }
+    
+    val openDocxLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { 
+            selectedUri = it
+            fileName = FileUtils.getFileName(context, it)
+            fileSize = FileUtils.getFileSize(context, it)
+            selectedFileType = "docx"
         }
     }
 
@@ -61,7 +74,7 @@ fun MainScreen(
         )
         
         Text(
-            text = "PDF Viewer",
+            text = "Document Viewer & Editor",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -69,21 +82,45 @@ fun MainScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // File picker button
-        Button(
-            onClick = {
-                openDocLauncher.launch(arrayOf("application/pdf"))
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+        // File picker buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(Icons.Default.PictureAsPdf, contentDescription = null)
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Select PDF Document", style = MaterialTheme.typography.titleMedium)
+            Button(
+                onClick = {
+                    openPdfLauncher.launch(arrayOf("application/pdf"))
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("PDF", style = MaterialTheme.typography.titleSmall)
+            }
+            
+            Button(
+                onClick = {
+                    openDocxLauncher.launch(arrayOf(
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "application/msword"
+                    ))
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Icon(Icons.Default.Description, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("DOCX", style = MaterialTheme.typography.titleSmall)
+            }
         }
 
         // File info card
